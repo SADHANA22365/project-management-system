@@ -21,6 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.company.pms.entity.ProjectMember;
+import com.company.pms.enums.ProjectRole;
+import com.company.pms.repository.ProjectMemberRepository;
 
 import java.time.LocalDate;
 
@@ -33,14 +36,17 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
+    private final ProjectMemberRepository memberRepository;
 
-    public ProjectServiceImpl(ProjectRepository projectRepository,
-                              UserRepository userRepository,
-                              ProjectMapper projectMapper) {
-        this.projectRepository = projectRepository;
-        this.userRepository = userRepository;
-        this.projectMapper = projectMapper;
-    }
+   public ProjectServiceImpl(ProjectRepository projectRepository,
+                          UserRepository userRepository,
+                          ProjectMemberRepository memberRepository,
+                          ProjectMapper projectMapper) {
+    this.projectRepository = projectRepository;
+    this.userRepository = userRepository;
+    this.memberRepository = memberRepository;
+    this.projectMapper = projectMapper;
+}
 
     @Override
     @Transactional
@@ -58,7 +64,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         Project saved = projectRepository.save(projectMapper.toEntity(request, manager));
-        // TODO (Phase 4): add the manager as a LEAD project member here
+        memberRepository.save(new ProjectMember(saved, manager, ProjectRole.LEAD));
         log.info("Created project id={}", saved.getId());
         return projectMapper.toResponse(saved);
     }
