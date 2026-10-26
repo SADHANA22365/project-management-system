@@ -26,4 +26,8 @@ public interface TaskService {
     void delete(Long id);
 
     PageResponse<TaskResponse> getOverdue(Pageable pageable);
+
+    TaskResponse addLabel(Long taskId, Long labelId);
+
+    TaskResponse removeLabel(Long taskId, Long labelId);
 }

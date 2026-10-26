@@ -6,13 +6,16 @@ import com.company.pms.dto.request.UpdateTaskRequest;
 import com.company.pms.dto.request.UpdateTaskStatusRequest;
 import com.company.pms.dto.response.PageResponse;
 import com.company.pms.dto.response.TaskResponse;
+import com.company.pms.entity.Label;
 import com.company.pms.entity.Project;
 import com.company.pms.entity.Task;
 import com.company.pms.entity.User;
 import com.company.pms.enums.TaskStatus;
 import com.company.pms.exception.BusinessRuleException;
+import com.company.pms.exception.InvalidRequestException;
 import com.company.pms.exception.ResourceNotFoundException;
 import com.company.pms.mapper.TaskMapper;
+import com.company.pms.repository.LabelRepository;
 import com.company.pms.repository.ProjectMemberRepository;
 import com.company.pms.repository.ProjectRepository;
 import com.company.pms.repository.TaskRepository;
@@ -26,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import com.company.pms.exception.InvalidRequestException;
 import java.util.Set;
 
 @Service
@@ -34,6 +36,7 @@ import java.util.Set;
 public class TaskServiceImpl implements TaskService {
 
     private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
+
     private static final Set<String> OVERDUE_SORT_FIELDS = Set.of(
             "id", "title", "priority", "status", "dueDate",
             "estimatedHours", "createdAt", "updatedAt");
@@ -42,17 +45,20 @@ public class TaskServiceImpl implements TaskService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final LabelRepository labelRepository;
     private final TaskMapper taskMapper;
 
     public TaskServiceImpl(TaskRepository taskRepository,
                            ProjectRepository projectRepository,
                            UserRepository userRepository,
                            ProjectMemberRepository projectMemberRepository,
+                           LabelRepository labelRepository,
                            TaskMapper taskMapper) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.projectMemberRepository = projectMemberRepository;
+        this.labelRepository = labelRepository;
         this.taskMapper = taskMapper;
     }
 
@@ -165,13 +171,39 @@ public class TaskServiceImpl implements TaskService {
         log.info("Deleted task id={}", id);
     }
 
-        @Override
+    @Override
     public PageResponse<TaskResponse> getOverdue(Pageable pageable) {
         validateSortFields(pageable);
         LocalDate today = LocalDate.now();
         Page<Task> page = taskRepository.findOverdue(today, pageable);
         return PageResponse.from(page.map(task -> taskMapper.toResponse(task, today)));
     }
+
+    @Override
+    @Transactional
+    public TaskResponse addLabel(Long taskId, Long labelId) {
+        Task task = findTask(taskId);
+        requireOpenProject(task.getProject());
+        Label label = findLabel(labelId);
+
+        task.addLabel(label);
+        log.info("Label id={} attached to task id={}", labelId, taskId);
+        return taskMapper.toResponse(task, LocalDate.now());
+    }
+
+    @Override
+    @Transactional
+    public TaskResponse removeLabel(Long taskId, Long labelId) {
+        Task task = findTask(taskId);
+        requireOpenProject(task.getProject());
+        Label label = findLabel(labelId);
+
+        task.removeLabel(label);
+        log.info("Label id={} detached from task id={}", labelId, taskId);
+        return taskMapper.toResponse(task, LocalDate.now());
+    }
+
+    // ---------- helper methods ----------
 
     private void validateSortFields(Pageable pageable) {
         pageable.getSort().forEach(order -> {
@@ -181,11 +213,14 @@ public class TaskServiceImpl implements TaskService {
         });
     }
 
-    // ---------- helper methods ----------
-
     private Task findTask(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id " + id));
+    }
+
+    private Label findLabel(Long id) {
+        return labelRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Label", id));
     }
 
     private Project findProject(Long projectId) {

@@ -6,6 +6,7 @@ import com.company.pms.enums.TaskStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record TaskResponse(
         Long id,
@@ -21,6 +22,7 @@ public record TaskResponse(
         String assigneeName,
         Long reporterId,
         String reporterName,
+        List<LabelResponse> labels,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

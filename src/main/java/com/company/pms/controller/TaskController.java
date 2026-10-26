@@ -78,6 +78,18 @@ public class TaskController {
         return taskService.updateAssignee(id, request);
     }
 
+    @PutMapping("/tasks/{taskId}/labels/{labelId}")
+    public TaskResponse addLabel(@PathVariable Long taskId,
+                                 @PathVariable Long labelId) {
+        return taskService.addLabel(taskId, labelId);
+    }
+
+    @DeleteMapping("/tasks/{taskId}/labels/{labelId}")
+    public TaskResponse removeLabel(@PathVariable Long taskId,
+                                    @PathVariable Long labelId) {
+        return taskService.removeLabel(taskId, labelId);
+    }
+
     @DeleteMapping("/tasks/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

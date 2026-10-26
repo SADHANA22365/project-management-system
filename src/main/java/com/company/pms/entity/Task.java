@@ -18,7 +18,8 @@ import java.time.LocalDate;
 import java.util.Collections;           // NEW
 import java.util.HashSet;               // NEW
 import java.util.Objects;
-import java.util.Set;                   // NEW
+import java.util.Set;  
+import org.hibernate.annotations.BatchSize;                 // NEW
 
 @Entity
 @Table(name = "tasks")
@@ -57,6 +58,7 @@ public class Task extends BaseEntity {
 
     // NEW: Task owns the many-to-many link and the join table
     @ManyToMany(fetch = FetchType.LAZY)
+    @BatchSize(size = 50)
     @JoinTable(
             name = "task_labels",
             joinColumns = @JoinColumn(name = "task_id"),
