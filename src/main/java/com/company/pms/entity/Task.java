@@ -8,12 +8,17 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;   // NEW
+import jakarta.persistence.ManyToMany;  // NEW
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;           // NEW
+import java.util.HashSet;               // NEW
 import java.util.Objects;
+import java.util.Set;                   // NEW
 
 @Entity
 @Table(name = "tasks")
@@ -50,6 +55,14 @@ public class Task extends BaseEntity {
     @JoinColumn(name = "reporter_id", nullable = false)
     private User reporter;
 
+    // NEW: Task owns the many-to-many link and the join table
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "task_labels",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "label_id"))
+    private Set<Label> labels = new HashSet<>();
+
     protected Task() {
     }
 
@@ -70,6 +83,16 @@ public class Task extends BaseEntity {
 
     public boolean isOverdue(LocalDate today) {
         return dueDate != null && dueDate.isBefore(today) && status.isOpen();
+    }
+
+    // NEW
+    public void addLabel(Label label) {
+        labels.add(label);
+    }
+
+    // NEW
+    public void removeLabel(Label label) {
+        labels.remove(label);
     }
 
     public String getTitle() {
@@ -134,6 +157,11 @@ public class Task extends BaseEntity {
 
     public User getReporter() {
         return reporter;
+    }
+
+    // NEW: read-only view
+    public Set<Label> getLabels() {
+        return Collections.unmodifiableSet(labels);
     }
 
     @Override
