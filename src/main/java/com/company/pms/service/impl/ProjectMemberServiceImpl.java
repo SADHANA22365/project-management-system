@@ -7,12 +7,14 @@ import com.company.pms.entity.Project;
 import com.company.pms.entity.ProjectMember;
 import com.company.pms.entity.User;
 import com.company.pms.enums.ProjectRole;
+import com.company.pms.enums.TaskStatus;
 import com.company.pms.exception.BusinessRuleException;
 import com.company.pms.exception.DuplicateResourceException;
 import com.company.pms.exception.ResourceNotFoundException;
 import com.company.pms.mapper.ProjectMemberMapper;
 import com.company.pms.repository.ProjectMemberRepository;
 import com.company.pms.repository.ProjectRepository;
+import com.company.pms.repository.TaskRepository;
 import com.company.pms.repository.UserRepository;
 import com.company.pms.service.ProjectMemberService;
 import org.slf4j.Logger;
@@ -31,15 +33,18 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     private final ProjectMemberRepository memberRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final TaskRepository taskRepository;
     private final ProjectMemberMapper memberMapper;
 
     public ProjectMemberServiceImpl(ProjectMemberRepository memberRepository,
                                     ProjectRepository projectRepository,
                                     UserRepository userRepository,
+                                    TaskRepository taskRepository,
                                     ProjectMemberMapper memberMapper) {
         this.memberRepository = memberRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.taskRepository = taskRepository;
         this.memberMapper = memberMapper;
     }
 
@@ -96,7 +101,11 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         if (member.getProjectRole() == ProjectRole.LEAD) {
             ensureAnotherLeadExists(projectId);
         }
-        // TODO (Phase 5): refuse removal if the user has open tasks in this project
+        if (taskRepository.existsByAssigneeIdAndProjectIdAndStatusNot(
+                userId, projectId, TaskStatus.DONE)) {
+            throw new BusinessRuleException(
+                    "Cannot remove a member who still has open tasks in this project");
+        }
 
         memberRepository.delete(member);
         log.info("Removed user id={} from project id={}", userId, projectId);
