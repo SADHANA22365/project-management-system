@@ -30,6 +30,13 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     long countByProjectIdAndStatusNot(Long projectId, TaskStatus status);
 
+    long countByLabelsId(Long labelId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = "delete from task_labels where task_id in "
+            + "(select id from tasks where project_id = :projectId)", nativeQuery = true)
+    void deleteLabelLinksByProjectId(@Param("projectId") Long projectId);
+
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from Task t where t.project.id = :projectId")
     void deleteByProjectId(@Param("projectId") Long projectId);

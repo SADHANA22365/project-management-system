@@ -5,10 +5,12 @@ import com.company.pms.dto.request.UpdateLabelRequest;
 import com.company.pms.dto.response.LabelResponse;
 import com.company.pms.dto.response.PageResponse;
 import com.company.pms.entity.Label;
+import com.company.pms.exception.BusinessRuleException;
 import com.company.pms.exception.DuplicateResourceException;
 import com.company.pms.exception.ResourceNotFoundException;
 import com.company.pms.mapper.LabelMapper;
 import com.company.pms.repository.LabelRepository;
+import com.company.pms.repository.TaskRepository;
 import com.company.pms.service.LabelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +26,14 @@ public class LabelServiceImpl implements LabelService {
     private static final Logger log = LoggerFactory.getLogger(LabelServiceImpl.class);
 
     private final LabelRepository labelRepository;
+    private final TaskRepository taskRepository;
     private final LabelMapper labelMapper;
 
-    public LabelServiceImpl(LabelRepository labelRepository, LabelMapper labelMapper) {
+    public LabelServiceImpl(LabelRepository labelRepository,
+                            TaskRepository taskRepository,
+                            LabelMapper labelMapper) {
         this.labelRepository = labelRepository;
+        this.taskRepository = taskRepository;
         this.labelMapper = labelMapper;
     }
 
@@ -73,7 +79,11 @@ public class LabelServiceImpl implements LabelService {
     @Transactional
     public void delete(Long id) {
         Label label = findLabelOrThrow(id);
-        // TODO (Step 51): refuse deletion (422) while the label is used by any task
+        long usedBy = taskRepository.countByLabelsId(id);
+        if (usedBy > 0) {
+            throw new BusinessRuleException("Label is used by " + usedBy
+                    + " task(s) and cannot be deleted");
+        }
         labelRepository.delete(label);
         log.info("Deleted label id={}", id);
     }

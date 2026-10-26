@@ -126,10 +126,11 @@ public class ProjectServiceImpl implements ProjectService {
         return projectMapper.toResponse(project);
     }
 
-        @Override
+    @Override
     @Transactional
     public void delete(Long id) {
         Project project = findProjectOrThrow(id);
+        taskRepository.deleteLabelLinksByProjectId(id);
         taskRepository.deleteByProjectId(id);
         memberRepository.deleteByProjectId(id);
         projectRepository.delete(project);
