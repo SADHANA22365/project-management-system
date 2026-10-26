@@ -6,13 +6,18 @@ import com.company.pms.dto.request.UpdateProjectStatusRequest;
 import com.company.pms.dto.response.PageResponse;
 import com.company.pms.dto.response.ProjectResponse;
 import com.company.pms.entity.Project;
+import com.company.pms.entity.ProjectMember;
 import com.company.pms.entity.User;
+import com.company.pms.enums.ProjectRole;
 import com.company.pms.enums.ProjectStatus;
+import com.company.pms.enums.TaskStatus;
 import com.company.pms.exception.BusinessRuleException;
 import com.company.pms.exception.DuplicateResourceException;
 import com.company.pms.exception.ResourceNotFoundException;
 import com.company.pms.mapper.ProjectMapper;
+import com.company.pms.repository.ProjectMemberRepository;
 import com.company.pms.repository.ProjectRepository;
+import com.company.pms.repository.TaskRepository;
 import com.company.pms.repository.UserRepository;
 import com.company.pms.service.ProjectService;
 import org.slf4j.Logger;
@@ -21,9 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.company.pms.entity.ProjectMember;
-import com.company.pms.enums.ProjectRole;
-import com.company.pms.repository.ProjectMemberRepository;
 
 import java.time.LocalDate;
 
@@ -37,16 +39,19 @@ public class ProjectServiceImpl implements ProjectService {
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
     private final ProjectMemberRepository memberRepository;
+    private final TaskRepository taskRepository;
 
-   public ProjectServiceImpl(ProjectRepository projectRepository,
-                          UserRepository userRepository,
-                          ProjectMemberRepository memberRepository,
-                          ProjectMapper projectMapper) {
-    this.projectRepository = projectRepository;
-    this.userRepository = userRepository;
-    this.memberRepository = memberRepository;
-    this.projectMapper = projectMapper;
-}
+    public ProjectServiceImpl(ProjectRepository projectRepository,
+                              UserRepository userRepository,
+                              ProjectMemberRepository memberRepository,
+                              TaskRepository taskRepository,
+                              ProjectMapper projectMapper) {
+        this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
+        this.memberRepository = memberRepository;
+        this.taskRepository = taskRepository;
+        this.projectMapper = projectMapper;
+    }
 
     @Override
     @Transactional
@@ -109,7 +114,12 @@ public class ProjectServiceImpl implements ProjectService {
                     "Cannot change project status from %s to %s. Allowed: %s",
                     current, target, current.allowedTransitions()));
         }
-        // TODO (Phase 5): if target is COMPLETED, require every task to be DONE
+
+        if (target == ProjectStatus.COMPLETED
+                && taskRepository.countByProjectIdAndStatusNot(id, TaskStatus.DONE) > 0) {
+            throw new BusinessRuleException(
+                    "Project cannot be completed while it has tasks that are not DONE");
+        }
 
         project.setStatus(target);
         log.info("Project id={} status {} -> {}", id, current, target);
