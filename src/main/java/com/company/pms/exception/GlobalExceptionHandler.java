@@ -16,7 +16,8 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.core.PropertyReferenceException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -65,7 +66,24 @@ public class GlobalExceptionHandler {
                 ex.getValue(), ex.getName());
         return build(HttpStatus.BAD_REQUEST, message, request, null);
     }
-
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex,
+                                                             HttpServletRequest request) {
+        log.warn("Data integrity violation on {}", request.getRequestURI(), ex);
+        return build(HttpStatus.CONFLICT,
+                "The request conflicts with existing data", request, null);
+    }
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSort(PropertyReferenceException ex,
+                                                           HttpServletRequest request) {
+        String message = "Invalid sort field '" + ex.getPropertyName() + "'";
+        return build(HttpStatus.BAD_REQUEST, message, request, null);
+    }
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRequest(InvalidRequestException ex,
+                                                              HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex,
                                                           HttpServletRequest request) {

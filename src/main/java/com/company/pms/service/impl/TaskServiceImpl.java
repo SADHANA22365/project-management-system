@@ -26,12 +26,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import com.company.pms.exception.InvalidRequestException;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
 public class TaskServiceImpl implements TaskService {
 
     private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
+    private static final Set<String> OVERDUE_SORT_FIELDS = Set.of(
+            "id", "title", "priority", "status", "dueDate",
+            "estimatedHours", "createdAt", "updatedAt");
 
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
@@ -160,11 +165,20 @@ public class TaskServiceImpl implements TaskService {
         log.info("Deleted task id={}", id);
     }
 
-    @Override
+        @Override
     public PageResponse<TaskResponse> getOverdue(Pageable pageable) {
+        validateSortFields(pageable);
         LocalDate today = LocalDate.now();
         Page<Task> page = taskRepository.findOverdue(today, pageable);
         return PageResponse.from(page.map(task -> taskMapper.toResponse(task, today)));
+    }
+
+    private void validateSortFields(Pageable pageable) {
+        pageable.getSort().forEach(order -> {
+            if (!OVERDUE_SORT_FIELDS.contains(order.getProperty())) {
+                throw new InvalidRequestException("Invalid sort field '" + order.getProperty() + "'");
+            }
+        });
     }
 
     // ---------- helper methods ----------
