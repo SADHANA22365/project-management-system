@@ -15,6 +15,7 @@ import com.company.pms.exception.BusinessRuleException;
 import com.company.pms.exception.DuplicateResourceException;
 import com.company.pms.exception.ResourceNotFoundException;
 import com.company.pms.mapper.ProjectMapper;
+import com.company.pms.repository.CommentRepository;
 import com.company.pms.repository.ProjectMemberRepository;
 import com.company.pms.repository.ProjectRepository;
 import com.company.pms.repository.TaskRepository;
@@ -40,16 +41,19 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMapper projectMapper;
     private final ProjectMemberRepository memberRepository;
     private final TaskRepository taskRepository;
+    private final CommentRepository commentRepository;
 
     public ProjectServiceImpl(ProjectRepository projectRepository,
                               UserRepository userRepository,
                               ProjectMemberRepository memberRepository,
                               TaskRepository taskRepository,
+                              CommentRepository commentRepository,
                               ProjectMapper projectMapper) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.memberRepository = memberRepository;
         this.taskRepository = taskRepository;
+        this.commentRepository = commentRepository;
         this.projectMapper = projectMapper;
     }
 
@@ -129,12 +133,13 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Project project = findProjectOrThrow(id);
+        findProjectOrThrow(id);
+        commentRepository.deleteByProjectId(id);
         taskRepository.deleteLabelLinksByProjectId(id);
         taskRepository.deleteByProjectId(id);
         memberRepository.deleteByProjectId(id);
-        projectRepository.delete(project);
-        log.info("Deleted project id={} with its tasks and members", id);
+        projectRepository.deleteById(id);
+        log.info("Deleted project id={} with its comments, tasks and members", id);
     }
 
     private Project findProjectOrThrow(Long id) {

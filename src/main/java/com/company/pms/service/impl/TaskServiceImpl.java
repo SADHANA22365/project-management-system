@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Set;
-
+import com.company.pms.repository.CommentRepository;
 @Service
 @Transactional(readOnly = true)
 public class TaskServiceImpl implements TaskService {
@@ -41,11 +41,12 @@ public class TaskServiceImpl implements TaskService {
             "id", "title", "priority", "status", "dueDate",
             "estimatedHours", "createdAt", "updatedAt");
 
-    private final TaskRepository taskRepository;
+        private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final LabelRepository labelRepository;
+    private final CommentRepository commentRepository;
     private final TaskMapper taskMapper;
 
     public TaskServiceImpl(TaskRepository taskRepository,
@@ -53,12 +54,14 @@ public class TaskServiceImpl implements TaskService {
                            UserRepository userRepository,
                            ProjectMemberRepository projectMemberRepository,
                            LabelRepository labelRepository,
+                           CommentRepository commentRepository,
                            TaskMapper taskMapper) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.labelRepository = labelRepository;
+        this.commentRepository = commentRepository;
         this.taskMapper = taskMapper;
     }
 
@@ -167,8 +170,9 @@ public class TaskServiceImpl implements TaskService {
     public void delete(Long id) {
         Task task = findTask(id);
         requireOpenProject(task.getProject());
-        taskRepository.delete(task);
-        log.info("Deleted task id={}", id);
+        commentRepository.deleteByTaskId(id);
+        taskRepository.deleteById(id);
+        log.info("Deleted task id={} with its comments", id);
     }
 
     @Override
