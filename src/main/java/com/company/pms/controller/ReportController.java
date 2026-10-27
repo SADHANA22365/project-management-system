@@ -13,6 +13,7 @@ import com.company.pms.dto.response.ProjectSummaryResponse;
 import com.company.pms.dto.response.UserWorkloadResponse;
 
 @Tag(name = "Reports", description = "Dashboard, project progress and summary, user workload")
+@RestController
 @RequestMapping("/api/v1")
 public class ReportController {
 

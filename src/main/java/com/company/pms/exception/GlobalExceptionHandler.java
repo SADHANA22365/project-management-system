@@ -18,6 +18,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.core.PropertyReferenceException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -83,6 +86,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidRequest(InvalidRequestException ex,
                                                               HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
+    }
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(NoResourceFoundException ex,
+                                                      HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND,
+            "No endpoint found for " + request.getRequestURI(), request, null);
+    }
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex,
+                                                            HttpServletRequest request) {
+        return build(HttpStatus.METHOD_NOT_ALLOWED,
+            "Method " + ex.getMethod() + " is not supported for " + request.getRequestURI(),
+            request, null);
     }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex,
