@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
@@ -31,6 +32,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     long countByProjectIdAndStatusNot(Long projectId, TaskStatus status);
 
     long countByLabelsId(Long labelId);
+    @Query("select t.status as status, count(t) as total "
+            + "from Task t where t.project.id = :projectId group by t.status")
+    List<TaskStatusCount> countByStatusForProject(@Param("projectId") Long projectId);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "delete from task_labels where task_id in "
