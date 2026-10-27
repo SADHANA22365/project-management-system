@@ -26,7 +26,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Issues (enhancement)", description = "Bugs, features and improvements")
 @RestController
 @RequestMapping("/api/v1")
 public class IssueController {
@@ -64,6 +67,9 @@ public class IssueController {
                                 @Valid @RequestBody UpdateIssueRequest request) {
         return issueService.update(id, request);
     }
+
+    @Operation(summary = "Change issue status",
+        description = "Follows the issue workflow. An illegal move returns 422 with the allowed moves.")
 
     @PatchMapping("/issues/{id}/status")
     public IssueResponse updateStatus(@PathVariable Long id,

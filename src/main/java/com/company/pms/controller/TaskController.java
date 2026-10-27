@@ -23,7 +23,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Tasks", description = "Create, assign and track tasks")
 @RestController
 @RequestMapping("/api/v1")
 public class TaskController {
@@ -49,6 +52,9 @@ public class TaskController {
         return taskService.getByProject(projectId, status, pageable);
     }
 
+    @Operation(summary = "List overdue tasks",
+        description = "Due date is before today and the status is not DONE.")
+
     @GetMapping("/tasks/overdue")
     public PageResponse<TaskResponse> getOverdue(
             @PageableDefault(sort = "dueDate") Pageable pageable) {
@@ -66,11 +72,17 @@ public class TaskController {
         return taskService.update(id, request);
     }
 
+    @Operation(summary = "Change task status",
+        description = "Must follow the allowed transitions, for example TODO to DONE is refused (422).")
+
     @PatchMapping("/tasks/{id}/status")
     public TaskResponse updateStatus(@PathVariable Long id,
                                      @Valid @RequestBody UpdateTaskStatusRequest request) {
         return taskService.updateStatus(id, request);
     }
+
+    @Operation(summary = "Assign or unassign a task",
+        description = "The assignee must be an active member of the task's project.")
 
     @PatchMapping("/tasks/{id}/assignee")
     public TaskResponse updateAssignee(@PathVariable Long id,

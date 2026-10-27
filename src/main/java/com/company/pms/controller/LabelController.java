@@ -18,7 +18,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Labels", description = "Manage labels and attach them to tasks")
 @RestController
 @RequestMapping("/api/v1/labels")
 public class LabelController {
@@ -50,6 +53,9 @@ public class LabelController {
                                 @Valid @RequestBody UpdateLabelRequest request) {
         return labelService.update(id, request);
     }
+
+    @Operation(summary = "Delete a label",
+        description = "Refused (422) while any task still uses the label.")
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

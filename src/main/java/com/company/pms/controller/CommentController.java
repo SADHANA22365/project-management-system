@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 
+@Tag(name = "Comments", description = "Comments on tasks, oldest first")
 @RestController
 @RequestMapping("/api/v1")
 public class CommentController {
@@ -27,6 +29,10 @@ public class CommentController {
     public CommentController(CommentService commentService) {
         this.commentService = commentService;
     }
+
+    @Operation(summary = "Add a comment",
+        description = "The author must be an active member of the task's project. "
+                + "Not allowed in COMPLETED or CANCELLED projects.")
 
     @PostMapping("/tasks/{taskId}/comments")
     public ResponseEntity<CommentResponse> create(@PathVariable Long taskId,

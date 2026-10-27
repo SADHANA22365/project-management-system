@@ -17,9 +17,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Users", description = "Create, update and (de)activate users")
 @RestController
 @RequestMapping("/api/v1/users")
+
 public class UserController {
 
     private final UserService userService;
@@ -27,6 +31,9 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
+
+    @Operation(summary = "Create a user",
+        description = "Email must be unique ignoring case (409 if it already exists).")
 
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {
@@ -53,6 +60,10 @@ public class UserController {
     public UserResponse activate(@PathVariable Long id) {
         return userService.activate(id);
     }
+
+    @Operation(summary = "Deactivate a user",
+        description = "Deactivated users cannot be assigned tasks, added to projects, "
+                + "report tasks or write comments.")
 
     @PatchMapping("/{id}/deactivate")
     public UserResponse deactivate(@PathVariable Long id) {

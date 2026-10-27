@@ -1,5 +1,7 @@
 package com.company.pms.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.company.pms.dto.response.ProjectProgressResponse;
 import com.company.pms.service.ReportService;
 import com.company.pms.dto.response.DashboardResponse;
@@ -10,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.company.pms.dto.response.ProjectSummaryResponse;
 import com.company.pms.dto.response.UserWorkloadResponse;
 
-@RestController
+@Tag(name = "Reports", description = "Dashboard, project progress and summary, user workload")
 @RequestMapping("/api/v1")
 public class ReportController {
 

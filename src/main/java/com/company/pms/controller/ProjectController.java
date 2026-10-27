@@ -21,7 +21,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Projects", description = "Create projects, change their status and view progress")
 @RestController
 @RequestMapping("/api/v1/projects")
 public class ProjectController {
@@ -55,11 +58,18 @@ public class ProjectController {
         return projectService.update(id, request);
     }
 
+    @Operation(summary = "Change project status",
+        description = "Must follow the allowed transitions (422 otherwise). "
+                + "COMPLETED requires every task to be DONE.")
+
     @PatchMapping("/{id}/status")
     public ProjectResponse updateStatus(@PathVariable Long id,
                                         @Valid @RequestBody UpdateProjectStatusRequest request) {
         return projectService.updateStatus(id, request);
     }
+
+    @Operation(summary = "Delete a project",
+        description = "Also deletes its tasks, comments, issues and members.")
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
-
+@Tag(name = "Project Members", description = "Add members and manage their roles in a project")
 @RestController
 @RequestMapping("/api/v1/projects/{projectId}/members")
 public class ProjectMemberController {
@@ -46,6 +48,9 @@ public class ProjectMemberController {
                                      @Valid @RequestBody UpdateMemberRoleRequest request) {
         return memberService.updateRole(projectId, userId, request);
     }
+
+    @Operation(summary = "Remove a member",
+        description = "Refused (422) if this is the last LEAD or the member has open tasks.")
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> removeMember(@PathVariable Long projectId,
