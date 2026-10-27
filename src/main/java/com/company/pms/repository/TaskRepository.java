@@ -32,9 +32,17 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     long countByProjectIdAndStatusNot(Long projectId, TaskStatus status);
 
     long countByLabelsId(Long labelId);
+
     @Query("select t.status as status, count(t) as total "
             + "from Task t where t.project.id = :projectId group by t.status")
     List<TaskStatusCount> countByStatusForProject(@Param("projectId") Long projectId);
+
+    @Query("select t.status as status, count(t) as total from Task t group by t.status")
+    List<TaskStatusCount> countGroupedByStatus();
+
+    @Query("select count(t) from Task t "
+            + "where t.dueDate < :today and t.status <> com.company.pms.enums.TaskStatus.DONE")
+    long countOverdue(@Param("today") LocalDate today);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "delete from task_labels where task_id in "

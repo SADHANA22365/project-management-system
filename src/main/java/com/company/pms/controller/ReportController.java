@@ -2,6 +2,7 @@ package com.company.pms.controller;
 
 import com.company.pms.dto.response.ProjectProgressResponse;
 import com.company.pms.service.ReportService;
+import com.company.pms.dto.response.DashboardResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,5 +21,10 @@ public class ReportController {
     @GetMapping("/projects/{projectId}/progress")
     public ProjectProgressResponse getProjectProgress(@PathVariable Long projectId) {
         return reportService.getProjectProgress(projectId);
+    }
+
+    @GetMapping("/dashboard")
+    public DashboardResponse getDashboard() {
+        return reportService.getDashboard();
     }
 }
