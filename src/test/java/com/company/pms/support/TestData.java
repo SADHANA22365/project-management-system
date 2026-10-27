@@ -1,6 +1,7 @@
 package com.company.pms.support;
 
 import com.company.pms.entity.Project;
+import com.company.pms.entity.Task;
 import com.company.pms.entity.User;
 import com.company.pms.enums.Designation;
 import com.company.pms.enums.ProjectStatus;
@@ -29,5 +30,9 @@ public final class TestData {
         Project project = new Project("Project " + id, null, START, null, manager);
         project.setStatus(status);
         return withId(project, id);
+    }
+
+    public static Task task(Long id, Project project, User reporter) {
+        return withId(new Task("Fix bug", null, null, null, null, project, null, reporter), id);
     }
 }
