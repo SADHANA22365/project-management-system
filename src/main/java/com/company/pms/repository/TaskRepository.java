@@ -44,6 +44,20 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             + "where t.dueDate < :today and t.status <> com.company.pms.enums.TaskStatus.DONE")
     long countOverdue(@Param("today") LocalDate today);
 
+    @Query("select t.status as status, count(t) as total "
+            + "from Task t where t.assignee.id = :userId group by t.status")
+    List<TaskStatusCount> countByAssigneeGroupedByStatus(@Param("userId") Long userId);
+
+    @Query("select count(t) from Task t where t.project.id = :projectId "
+            + "and t.dueDate < :today and t.status <> com.company.pms.enums.TaskStatus.DONE")
+    long countOverdueByProjectId(@Param("projectId") Long projectId,
+                                 @Param("today") LocalDate today);
+
+    @Query("select count(t) from Task t where t.assignee.id = :userId "
+            + "and t.dueDate < :today and t.status <> com.company.pms.enums.TaskStatus.DONE")
+    long countOverdueByAssigneeId(@Param("userId") Long userId,
+                                  @Param("today") LocalDate today);
+
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "delete from task_labels where task_id in "
             + "(select id from tasks where project_id = :projectId)", nativeQuery = true)

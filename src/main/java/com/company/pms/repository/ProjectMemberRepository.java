@@ -25,4 +25,6 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from ProjectMember m where m.project.id = :projectId")
     void deleteByProjectId(@Param("projectId") Long projectId);
+
+    long countByProjectId(Long projectId);
 }

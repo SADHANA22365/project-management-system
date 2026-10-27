@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.company.pms.dto.response.ProjectSummaryResponse;
+import com.company.pms.dto.response.UserWorkloadResponse;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -26,5 +28,15 @@ public class ReportController {
     @GetMapping("/dashboard")
     public DashboardResponse getDashboard() {
         return reportService.getDashboard();
+    }
+
+    @GetMapping("/projects/{projectId}/summary")
+    public ProjectSummaryResponse getProjectSummary(@PathVariable Long projectId) {
+        return reportService.getProjectSummary(projectId);
+    }
+
+    @GetMapping("/users/{userId}/workload")
+    public UserWorkloadResponse getUserWorkload(@PathVariable Long userId) {
+        return reportService.getUserWorkload(userId);
     }
 }

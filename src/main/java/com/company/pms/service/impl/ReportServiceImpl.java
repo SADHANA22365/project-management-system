@@ -2,10 +2,14 @@ package com.company.pms.service.impl;
 
 import com.company.pms.dto.response.DashboardResponse;
 import com.company.pms.dto.response.ProjectProgressResponse;
+import com.company.pms.dto.response.ProjectSummaryResponse;
+import com.company.pms.dto.response.UserWorkloadResponse;
 import com.company.pms.entity.Project;
+import com.company.pms.entity.User;
 import com.company.pms.enums.ProjectStatus;
 import com.company.pms.enums.TaskStatus;
 import com.company.pms.exception.ResourceNotFoundException;
+import com.company.pms.repository.ProjectMemberRepository;
 import com.company.pms.repository.ProjectRepository;
 import com.company.pms.repository.ProjectStatusCount;
 import com.company.pms.repository.TaskRepository;
@@ -26,19 +30,21 @@ public class ReportServiceImpl implements ReportService {
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final ProjectMemberRepository projectMemberRepository;
 
     public ReportServiceImpl(ProjectRepository projectRepository,
                              TaskRepository taskRepository,
-                             UserRepository userRepository) {
+                             UserRepository userRepository,
+                             ProjectMemberRepository projectMemberRepository) {
         this.projectRepository = projectRepository;
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.projectMemberRepository = projectMemberRepository;
     }
 
     @Override
     public ProjectProgressResponse getProjectProgress(Long projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
+        Project project = findProject(projectId);
 
         Map<TaskStatus, Long> tasksByStatus = emptyCounts(TaskStatus.class);
         for (TaskStatusCount row : taskRepository.countByStatusForProject(projectId)) {
@@ -80,7 +86,49 @@ public class ReportServiceImpl implements ReportService {
                 userRepository.countByActiveTrue());
     }
 
+    @Override
+    public ProjectSummaryResponse getProjectSummary(Long projectId) {
+        Project project = findProject(projectId);
+        ProjectProgressResponse progress = getProjectProgress(projectId);
+
+        return new ProjectSummaryResponse(
+                project.getId(),
+                project.getName(),
+                project.getStatus(),
+                project.getStartDate(),
+                project.getEndDate(),
+                project.getManager().getFullName(),
+                projectMemberRepository.countByProjectId(projectId),
+                taskRepository.countOverdueByProjectId(projectId, LocalDate.now()),
+                progress);
+    }
+
+    @Override
+    public UserWorkloadResponse getUserWorkload(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+        Map<TaskStatus, Long> assignedByStatus = emptyCounts(TaskStatus.class);
+        for (TaskStatusCount row : taskRepository.countByAssigneeGroupedByStatus(userId)) {
+            assignedByStatus.put(row.getStatus(), row.getTotal());
+        }
+
+        long open = sum(assignedByStatus) - assignedByStatus.get(TaskStatus.DONE);
+
+        return new UserWorkloadResponse(
+                user.getId(),
+                user.getFullName(),
+                open,
+                taskRepository.countOverdueByAssigneeId(userId, LocalDate.now()),
+                assignedByStatus);
+    }
+
     // ---------- helper methods ----------
+
+    private Project findProject(Long projectId) {
+        return projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
+    }
 
     private <E extends Enum<E>> Map<E, Long> emptyCounts(Class<E> type) {
         Map<E, Long> counts = new EnumMap<>(type);
