@@ -21,6 +21,7 @@ import com.company.pms.repository.ProjectRepository;
 import com.company.pms.repository.TaskRepository;
 import com.company.pms.repository.UserRepository;
 import com.company.pms.service.ProjectService;
+import com.company.pms.repository.IssueRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -42,18 +43,21 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMemberRepository memberRepository;
     private final TaskRepository taskRepository;
     private final CommentRepository commentRepository;
+    private final IssueRepository issueRepository;
 
     public ProjectServiceImpl(ProjectRepository projectRepository,
                               UserRepository userRepository,
                               ProjectMemberRepository memberRepository,
                               TaskRepository taskRepository,
                               CommentRepository commentRepository,
+                              IssueRepository issueRepository,
                               ProjectMapper projectMapper) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.memberRepository = memberRepository;
         this.taskRepository = taskRepository;
         this.commentRepository = commentRepository;
+        this.issueRepository = issueRepository;
         this.projectMapper = projectMapper;
     }
 
@@ -135,11 +139,12 @@ public class ProjectServiceImpl implements ProjectService {
     public void delete(Long id) {
         findProjectOrThrow(id);
         commentRepository.deleteByProjectId(id);
+        issueRepository.deleteByProjectId(id);
         taskRepository.deleteLabelLinksByProjectId(id);
         taskRepository.deleteByProjectId(id);
         memberRepository.deleteByProjectId(id);
         projectRepository.deleteById(id);
-        log.info("Deleted project id={} with its comments, tasks and members", id);
+        log.info("Deleted project id={} with its comments, issues, tasks and members", id);
     }
 
     private Project findProjectOrThrow(Long id) {
