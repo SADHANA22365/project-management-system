@@ -44,6 +44,9 @@ public class Comment extends BaseEntity {
     public User getAuthor() {
         return author;
     }
+        public void setContent(String content) {
+        this.content = content;
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -21,6 +21,7 @@ import com.company.pms.repository.ProjectRepository;
 import com.company.pms.repository.TaskRepository;
 import com.company.pms.repository.UserRepository;
 import com.company.pms.service.TaskService;
+import com.company.pms.repository.CommentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -30,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Set;
-import com.company.pms.repository.CommentRepository;
+
 @Service
 @Transactional(readOnly = true)
 public class TaskServiceImpl implements TaskService {
@@ -41,7 +42,7 @@ public class TaskServiceImpl implements TaskService {
             "id", "title", "priority", "status", "dueDate",
             "estimatedHours", "createdAt", "updatedAt");
 
-        private final TaskRepository taskRepository;
+    private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectMemberRepository projectMemberRepository;
