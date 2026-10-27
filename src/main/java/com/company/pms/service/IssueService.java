@@ -6,6 +6,7 @@ import com.company.pms.dto.request.UpdateIssueRequest;
 import com.company.pms.dto.request.UpdateIssueStatusRequest;
 import com.company.pms.dto.response.IssueResponse;
 import com.company.pms.dto.response.PageResponse;
+import com.company.pms.dto.response.IssueStatisticsResponse;
 import com.company.pms.enums.IssueSeverity;
 import com.company.pms.enums.IssueStatus;
 import com.company.pms.enums.IssueType;
@@ -26,6 +27,8 @@ public interface IssueService {
     IssueResponse updateStatus(Long id, UpdateIssueStatusRequest request);
 
     IssueResponse updateAssignee(Long id, UpdateIssueAssigneeRequest request);
+
+    IssueStatisticsResponse getStatistics(Long projectId);
 
     void delete(Long id);
 }

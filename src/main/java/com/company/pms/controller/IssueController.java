@@ -6,6 +6,7 @@ import com.company.pms.dto.request.UpdateIssueRequest;
 import com.company.pms.dto.request.UpdateIssueStatusRequest;
 import com.company.pms.dto.response.IssueResponse;
 import com.company.pms.dto.response.PageResponse;
+import com.company.pms.dto.response.IssueStatisticsResponse;
 import com.company.pms.enums.IssueSeverity;
 import com.company.pms.enums.IssueStatus;
 import com.company.pms.enums.IssueType;
@@ -80,5 +81,10 @@ public class IssueController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         issueService.delete(id);
+    }
+
+    @GetMapping("/projects/{projectId}/issues/statistics")
+    public IssueStatisticsResponse getStatistics(@PathVariable Long projectId) {
+        return issueService.getStatistics(projectId);
     }
 }

@@ -12,6 +12,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
+
 public interface IssueRepository extends JpaRepository<Issue, Long> {
 
     @EntityGraph(attributePaths = {"assignee", "reporter"})
@@ -28,4 +31,18 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from Issue i where i.project.id = :projectId")
     void deleteByProjectId(@Param("projectId") Long projectId);
+
+    @Query("select i.status as status, i.type as type, i.severity as severity, count(i) as total "
+            + "from Issue i where i.project.id = :projectId "
+            + "group by i.status, i.type, i.severity")
+    List<IssueCount> countGroupedByProject(@Param("projectId") Long projectId);
+
+    @Query("select i.assignee.id as assigneeId, i.assignee.fullName as assigneeName, count(i) as total "
+            + "from Issue i where i.project.id = :projectId "
+            + "and i.type = com.company.pms.enums.IssueType.BUG "
+            + "and i.status in :statuses "
+            + "group by i.assignee.id, i.assignee.fullName "
+            + "order by count(i) desc, i.assignee.id asc")
+    List<OpenBugCount> countOpenBugsByAssignee(@Param("projectId") Long projectId,
+                                               @Param("statuses") Collection<IssueStatus> statuses);
 }

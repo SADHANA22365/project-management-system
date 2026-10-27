@@ -27,6 +27,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.company.pms.dto.response.IssueStatisticsResponse;
+import com.company.pms.repository.IssueCount;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -165,6 +171,47 @@ public class IssueServiceImpl implements IssueService {
         log.info("Deleted issue id={}", id);
     }
 
+    @Override
+    public IssueStatisticsResponse getStatistics(Long projectId) {
+        if (!projectRepository.existsById(projectId)) {
+            throw new ResourceNotFoundException("Project", projectId);
+        }
+
+        Map<IssueStatus, Long> byStatus = emptyCounts(IssueStatus.class);
+        Map<IssueType, Long> byType = emptyCounts(IssueType.class);
+        Map<IssueSeverity, Long> bySeverity = emptyCounts(IssueSeverity.class);
+        long total = 0;
+        long open = 0;
+        long openBugs = 0;
+
+        for (IssueCount row : issueRepository.countGroupedByProject(projectId)) {
+            long count = row.getTotal();
+            byStatus.merge(row.getStatus(), count, Long::sum);
+            byType.merge(row.getType(), count, Long::sum);
+            bySeverity.merge(row.getSeverity(), count, Long::sum);
+            total += count;
+            if (row.getStatus().isOpen()) {
+                open += count;
+                if (row.getType() == IssueType.BUG) {
+                    openBugs += count;
+                }
+            }
+        }
+
+        List<IssueStatus> openStatuses = Arrays.stream(IssueStatus.values())
+                .filter(IssueStatus::isOpen)
+                .toList();
+        List<IssueStatisticsResponse.AssigneeBugCount> perAssignee =
+                issueRepository.countOpenBugsByAssignee(projectId, openStatuses).stream()
+                        .map(row -> new IssueStatisticsResponse.AssigneeBugCount(
+                                row.getAssigneeId(), row.getAssigneeName(), row.getTotal()))
+                        .toList();
+
+        return new IssueStatisticsResponse(
+                projectId, total, open, openBugs,
+                byStatus, byType, bySeverity, perAssignee);
+    }
+
     // ---------- helper methods ----------
 
     private Issue findIssue(Long id) {
@@ -202,5 +249,13 @@ public class IssueServiceImpl implements IssueService {
             throw new BusinessRuleException(role + " is not a member of this project");
         }
         return user;
+    }
+
+    private <E extends Enum<E>> Map<E, Long> emptyCounts(Class<E> type) {
+        Map<E, Long> counts = new EnumMap<>(type);
+        for (E value : type.getEnumConstants()) {
+            counts.put(value, 0L);
+        }
+        return counts;
     }
 }
